@@ -1,0 +1,121 @@
+Create a separate directory under the location you are working
+
+# mkdir remote-state
+# cd remote-state
+
+#########
+Step #1 - Create a .tf file that will create s3 bucket aws
+#########
+
+vim s3-setup.tf 
+# with these contents
+# ----- file s3-setup.tf STARTS here
+
+resource "aws_s3_bucket" "terraform-state-storage-s3" {
+  bucket = "networknuts-terraform-state-s3"
+  region = "ap-south-1"
+
+  versioning {
+    # enable with caution, makes deleting S3 buckets tricky
+    enabled = false
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
+
+  tags = {
+    name = "S3 Remote Terraform State Store"
+    proj = "networknuts"
+    env = "prod"
+  }
+}
+
+# create a DynamoDB table for locking the state file
+resource "aws_dynamodb_table" "dynamodb-terraform-state-lock" {
+  name = "networknuts-iac-terraform-state-lock-dynamo"
+  hash_key = "LockID"
+  read_capacity = 20
+  write_capacity = 20
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+
+  tags = {
+    name = "DynamoDB Terraform State Lock Table"
+    proj = "networknuts"
+    env = "prod"
+  }
+}
+
+# --- file s3-setup.tf ENDS here
+
+Run: 
+# terraform plan
+# terraform init
+# terraform apply
+
+#########
+Step #2 - Create a file state-location.tf, which will change state file location from local to s3
+#########
+
+vim state-location.tf
+# --- file state-location.tf STARTS here
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+# store tfstate in s3 and locking information in DynamoDB
+terraform {
+  backend "s3" {
+    encrypt = true
+    # cannot contain interpolations
+    bucket = "networknuts-terraform-state-s3"
+    region = "ap-south-1"
+#first run terraform init and terraform apply with comment against dynamodb_table 
+#then run it again after removing the comment
+    #dynamodb_table = "networknuts-iac-terraform-state-lock-dynamo"
+    key = "terraform-state/terraform.tfstate"
+  }
+}
+
+# --- file state-location.tf ENDS here
+
+Run:
+# terraform plan
+# terraform init
+# terraform apply
+# --- now go and uncomment the dynanodb_table line 
+Run:
+# terraform plan
+# terraform init
+# terraform apply
+
+
+#########
+Step #3 - Create a resource and check the .tfstate file on AWS S3
+#########
+vim webserver.tf
+
+# --- file webserver.tf STARTS here
+
+resource "aws_instance" "webserver" {
+  ami           = "ami-0b5bff6d9495eff69"
+  instance_type = "t2.micro"
+  tags = {
+    Owner = "serverterra"
+  }
+
+}
+
+# --- file webserver.tf ENDS here
+
+Run:
+# terraform plan
+# terraform init (if prompted)
+# terraform apply
+
+#GO TO AWS dashboard and check .tfstate file
