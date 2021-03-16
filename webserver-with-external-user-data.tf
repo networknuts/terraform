@@ -55,7 +55,7 @@ variable "security_group_name" {
   default     = "terraform-example-instance"
 }
 
-#showing the public IP address using output
+#showing the public IP address using output IP
 
 output "public_ip" {
   value       = aws_instance.example.public_ip
