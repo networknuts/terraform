@@ -1,0 +1,147 @@
+#Create a directory "nn-app"
+#mkdir nn-app
+#Create another directory "modules" inside "nn-app"
+#mkdir -p nn-app/modules
+#mkdir -p nn-app/modules/ec2
+#mkdir -p nn-app/modules/vpc
+#Create one directory each for every environment, say "dev" and "prod"
+#mkdir -p nn-app/prod
+#mkdir -p nn-app/dev
+#
+# You should have this directory structure
+nn-app/
+  |__ modules
+  |      |_ ec2
+  |      |_ vpc
+  |__ dev
+  |__ prod
+  
+########
+
+Create a file vim nn-app/modules/ec2/instance.tf
+
+resource "aws_instance" "web" {
+  count         = "${var.ec2_count}"
+  ami           = "${var.ami_id}"
+  instance_type = "${var.instance_type}"
+  subnet_id     = "${var.subnet_id}"
+
+  tags {
+    Name = "networknuts"
+  }
+}
+
+## file instance.tf end here
+
+Create a file vim nn-app/modules/ec2/vars.tf
+
+variable "ec2_count" {
+  default = "1"
+}
+
+variable "ami_id" {}
+
+variable "instance_type" {
+  default = "t2.micro"
+}
+
+variable "subnet_id" {}
+
+## file vars.tf end here
+
+#Create a file vim nn-app/modules/vpc/networking.tf
+
+resource "aws_vpc" "main" {
+  cidr_block       = "${var.vpc_cidr}"
+  instance_tenancy = "${var.tenancy}"
+
+  tags {
+    Name = "main"
+  }
+}
+
+resource "aws_subnet" "main" {
+  vpc_id     = "${var.vpc_id}"
+  cidr_block = "${var.subnet_cidr}"
+
+  tags {
+    Name = "Main"
+  }
+}
+
+output "vpc_id" {
+  value = "${aws_vpc.main.id}"
+}
+
+output "subnet_id" {
+  value = "${aws_subnet.main.id}"
+}
+
+#file networking.tf end here
+
+## Create a file vim nn-app/modules/vpc/vars.tf
+
+variable "vpc_cidr" {
+  default = "10.0.0.0/16"
+}
+
+variable "tenancy" {
+  default = "dedicated"
+}
+
+variable "vpc_id" {}
+
+variable "subnet_cidr" {
+  default = "10.0.1.0/24"
+}
+
+# file vars.tf end here
+
+# Create a file vim nn-app/dev/main.tf
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+module "my_vpc" {
+  source      = "../modules/vpc"
+  vpc_cidr    = "192.168.0.0/16"
+  tenancy     = "default"
+  vpc_id      = "${module.my_vpc.vpc_id}"
+  subnet_cidr = "192.168.1.0/24"
+}
+
+module "my_ec2" {
+  source        = "../modules/ec2"
+  ec2_count     = 1
+  ami_id        = "ami-5a8da735"
+  instance_type = "t2.micro"
+  subnet_id     = "${module.my_vpc.subnet_id}"
+}
+
+# file main.tf end here
+
+# Create a file vim nn-app/prod/main.tf
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+module "my_vpc" {
+  source      = "../modules/vpc"
+  vpc_cidr    = "192.168.0.0/16"
+  tenancy     = "default"
+  vpc_id      = "${module.my_vpc.vpc_id}"
+  subnet_cidr = "192.168.1.0/24"
+}
+
+module "my_ec2" {
+  source        = "../modules/ec2"
+  ec2_count     = 1
+  ami_id        = "ami-5a8da735"
+  instance_type = "t2.micro"
+  subnet_id     = "${module.my_vpc.subnet_id}"
+}
+
+# file main.tf end here
+
