@@ -61,7 +61,7 @@ instance = "${aws_instance.ourfirst.id}"
 run
 # terraform validate
 # terraform plan
-# "check the value of ami"
+# "check the value of ami" based on region
 # now change the region to us-east-1 and run terraform plan again
 # "check the value of ami" again
 
