@@ -54,3 +54,4 @@ resource "aws_instance" "my_work" {
 
 #Delete a workspace
 #terraform workspace delete <workspace-name>
+#
