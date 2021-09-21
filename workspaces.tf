@@ -55,3 +55,6 @@ resource "aws_instance" "my_work" {
 #Delete a workspace
 #terraform workspace delete <workspace-name>
 #
+#The advantage of using locals instead of variables is that locals can have
+#logic inside them, instead of in the resource. Whereas variables only allows
+#values and push the logic inside the resource.
