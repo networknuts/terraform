@@ -1,0 +1,151 @@
+#CASE #1 - We can use variables using "locals" 
+# vim main.tf
+# -----
+
+locals {
+
+ ami  = "ami-0d26eb3972b7f8c96"
+
+type = "t2.micro"
+
+tags = {
+   Name = "My Virtual Machine"
+   Env  = "Dev"
+ }
+
+subnet = "subnet-76a8163a"
+
+nic    = aws_network_interface.my_nic.id
+
+}
+ 
+resource "aws_instance" "myvm" {
+ ami           = var.ami
+ instance_type = var.type
+ tags          = var.tags
+ 
+ network_interface {
+   network_interface_id = aws_network_interface.my_nic.id
+   device_index         = 0
+ }
+}
+ 
+resource "aws_network_interface" "my_nic" {
+ description = "My NIC"
+ subnet_id   = var.subnet
+ 
+ tags = {
+   Name = "My NIC"
+ }
+}
+
+### file END here
+### try to keep the number of local variables to their minimum. Using many local variables can make the code hard to read
+
+#CASE - 2 - Using external variables.tf file
+# vim variables.tf
+####
+
+variable "ami" {
+ type        = string
+ description = "AMI ID for the EC2 instance"
+ default     = "ami-0a23ccb2cdd9286bb"
+ 
+ validation {
+   condition     = length(var.ami) > 4 && substr(var.ami, 0, 4) == "ami-"
+   error_message = "Please provide a valid value for variable AMI."
+ }
+}
+ 
+variable "type" {
+ type        = string
+ description = "Instance type for the EC2 instance"
+ default     = "t2.micro"
+ sensitive   = true
+}
+ 
+variable "tags" {
+ type = object({
+   name = string
+   env  = string
+ })
+ description = "Tags for the EC2 instance"
+ default = {
+   name = "test-machine"
+   env  = "prod"
+ }
+}
+ 
+variable "subnet" {
+ type        = string
+ description = "Subnet ID for network interface"
+ default     = "subnet-76da2b1f"
+}
+
+### file END here
+
+## NOW create another file - main.tf with the code
+# vim main.tf
+####
+resource "aws_instance" "myvm" {
+ ami           = var.ami
+ instance_type = var.type
+ tags          = var.tags
+ 
+ network_interface {
+   network_interface_id = aws_network_interface.my_nic.id
+   device_index         = 0
+ }
+}
+ 
+resource "aws_network_interface" "my_nic" {
+ description = "My NIC"
+ subnet_id   = var.subnet
+ 
+ tags = {
+   Name = "My NIC"
+ }
+}
+
+### file END here
+
+
+## CASE - 3 - Substituting variable values at run time using -var
+#
+terraform plan -var "ami=test" -var "type=t2.nano" 
+# These variable will override the values in the variables.tf file
+
+## CASE - 4 - If you have a lot of variables to replace at runtime, then passing as -var can be tedious
+# There we use .tfvars file
+# vim newvalues.tfvar
+###
+ami  = "ami-0d26eb3972b7f8c96"
+type = "t2.nano"
+tags = {
+ "name" : "My Virtual Machine"
+ "env" : "Dev"
+}
+
+### file END here
+#
+#Now run the terraform - 
+terraform plan -var-file values.tfvars
+
+#CASE - 4 - Using environment variables
+
+# input variables values can also be set using Terraform environment variables. 
+# To do so, simply set the environment variable in the format TF_VAR_<variable name>
+
+export TF_VAR_ami=ami-0d26eb3972b7f8c96
+
+## REMEMBER
+# Terraform uses hierarchical logic to decide which value to consider in the event of a conflict.
+
+#The order is as follows:
+
+# 1. Environment variables
+# 2.The terraform.tfvars file, if present
+# 3. The terraform.tfvars.json file, if present
+# 4. Any *.auto.tfvars or *.auto.tfvars.json files, processed in lexical order of their filenames
+# 5. Any -var and -var-file options on the command line, in the order they are provided
+
