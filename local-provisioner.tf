@@ -9,8 +9,15 @@ resource "aws_instance" "sampleserver" {
   tags = {
      Name = "local-provisioner"
   }
+
+#this will run at creation
   provisioner "local-exec" {
      command = "echo Server IP address is ${self.private_ip}"
   }
 
+#this will run at destroy
+  provisioner "local-exec" {
+     when = destroy
+     command = "echo Server is destroyed"
+  }
 }
