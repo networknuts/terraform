@@ -2,6 +2,7 @@
 variable "ami" {
 	default = "ami-0447a12f28fddb066"
 	description = "AMI to use"
+	sensitive = true
 }
 
 #file end here
