@@ -15,7 +15,7 @@ resource "aws_instance" "indiaserver" {
    }
 }
 
-resource "aws_instance" "usaserver {
+resource "aws_instance" "usaserver" {
   ami = "ami-02e136e904f3da870"   #this ami is specific to virginia region
   instance_type = "t2.micro"
   provider = aws.usa
