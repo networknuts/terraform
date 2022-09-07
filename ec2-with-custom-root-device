@@ -6,6 +6,7 @@ provider "aws" {
 resource "aws_security_group" "webserver_access" {
         name = "webserver_access"
         description = "allow ssh and http"
+        vpc_id      = "vpc-your-vpc-id"
 
         ingress {
                 from_port = 80
