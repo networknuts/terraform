@@ -37,6 +37,7 @@ resource "aws_instance" "exampletwo" {
 resource "aws_security_group" "instance" {
 
   name = var.security_group_name
+  vpc_id      = "vpc-your-vpc-id"
 
         ingress {
                 from_port = 80
