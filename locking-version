@@ -1,0 +1,56 @@
+----
+terraform.tf
+----
+terraform {
+  required_providers {
+    random = {
+      source  = "hashicorp/random"
+      version = "3.0.0"
+    }
+
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 2.0.0"
+    }
+  }
+
+  required_version = ">= 1.1"
+}
+#### file end here
+----
+main.tf
+----
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "random_pet" "petname" {
+  length    = 5
+  separator = "-"
+}
+
+resource "aws_s3_bucket" "sample" {
+  bucket = random_pet.petname.id
+
+  acl    = "public-read"
+  region = "ap-south-1"
+
+  tags = {
+    public_bucket = true
+  }
+}
+
+#### file end here
+
+### terraform init
+### now check the lock file - terraform.lock.hcl
+### As a best practice always include lock file for your VCS
+### 
+### You can upgrade all providers - terraform init --upgrade
+### now check the lock file
+###
+### warning - you might get errors while apply as certain options / parameters
+###           might be deprecated. So check 
+
+
