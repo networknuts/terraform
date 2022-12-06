@@ -52,5 +52,31 @@ resource "aws_s3_bucket" "sample" {
 ###
 ### warning - you might get errors while apply as certain options / parameters
 ###           might be deprecated. So check 
+#### the NEW main.tf should look like this
+###
+main.tf
+###
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "random_pet" "petname" {
+  length    = 5
+  separator = "-"
+}
+
+resource "aws_s3_bucket" "sample" {
+  bucket = random_pet.petname.id
+
+  tags = {
+    public_bucket = true
+  }
+}
+
+resource "aws_s3_bucket_acl" "newfeature" {
+  bucket = aws_s3_bucket.sample.id
+  acl = "public-read"
+}
+
 
 
