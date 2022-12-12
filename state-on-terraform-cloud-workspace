@@ -1,0 +1,111 @@
+STEP #1 - Create a account on Terraform Cloud - https://cloud.hashicorp.com/products/terraform
+
+STEP #2 - In your local machine
+
+# mkdir ~/testing-cloud
+# cd testing-cloud
+# vim main.tf
+-------
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.16"
+    }
+  }
+
+  required_version = ">= 1.2.0"
+}
+
+provider "aws" {
+  region  = "ap-south-1"
+}
+
+resource "aws_instance" "app_server" {
+  ami           = "ami-074dc0a6f6c764218"
+  instance_type = "t2.micro"
+  tags = {
+     Name = "app-server"
+  }
+}
+
+-----
+# terraform init
+# terraform apply
+### This will create the resource and the state file will be in your local storage.
+
+STEP #3 - Login in your terraform cloud account and create a organisation and a workspace called "testing-tc". 
+          URL to workspace - https://app.terraform.io/app/<your-organisation>/workspaces
+
+STEP #4 - Change your main.tf and add a "cloud" block
+# vim main.tf
+-----
+
+terraform {
+  cloud {
+    organization = "your-organization"
+    workspaces {
+      name = "your-workspace"
+    }
+  }
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.16"
+    }
+  }
+
+  required_version = ">= 1.2.0"
+}
+
+provider "aws" {
+  region  = "ap-south-1"
+}
+
+resource "aws_instance" "app_server" {
+  ami           = "ami-074dc0a6f6c764218"
+  instance_type = "t2.micro"
+  tags = {
+     Name = "app-server"
+  }
+}
+
+-----
+
+STEP #5 - Login to terraform
+
+# terraform login
+<read carefully, follow the steps>
+<you will be asked to create your token and you will see a message like this>
+####
+---------------------------------------------------------------------------------
+
+Open the following URL to access the tokens page for app.terraform.io:
+    https://app.terraform.io/app/settings/tokens?source=terraform-login
+
+
+---------------------------------------------------------------------------------
+####
+Complete the login process.
+
+STEP #6 - Initialize the terraform
+
+# terraform init
+<by this time your state file has moved to terraform cloud, so you can, if you wish remove the local state file>
+
+STEP #7 - Set workspace variables
+Navigate to your workspace in Terraform Cloud and go to the workspace's Variables page. 
+Under Workspace Variables, add your AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as Environment Variables, 
+making sure to mark them as "Sensitive".
+
+STEP #8 - Apply configuration
+
+# terraform apply
+
+Terraform is now storing your state remotely in Terraform Cloud. 
+Remote state storage makes collaboration easier and keeps state and secret information off your local disk. 
+Remote state is loaded only in memory when it is used.
+
+STEP #9 - Destroy
+
+# terraform destroy
