@@ -20,9 +20,9 @@ nic    = aws_network_interface.my_nic.id
 }
  
 resource "aws_instance" "myvm" {
- ami           = var.ami
- instance_type = var.type
- tags          = var.tags
+ ami           = local.ami
+ instance_type = local.type
+ tags          = local.tags
  
  network_interface {
    network_interface_id = aws_network_interface.my_nic.id
@@ -32,7 +32,7 @@ resource "aws_instance" "myvm" {
  
 resource "aws_network_interface" "my_nic" {
  description = "My NIC"
- subnet_id   = var.subnet
+ subnet_id   = local.subnet
  
  tags = {
    Name = "My NIC"
