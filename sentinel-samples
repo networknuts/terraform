@@ -1,0 +1,61 @@
+###############################################
+   Policy to check tags on all aws instances
+###############################################
+import "tfplan"
+
+main = rule {
+   all tfplan.resources.aws_instance as _, instances {
+      all instances as _, r {
+            (length(r.applied.tags) else 0) >= 1
+      }
+   }
+}
+
+##################################################
+     Policy to allow certain instance types
+##################################################
+# Imports mock data
+import "tfplan/v2" as tfplan
+
+# Get all AWS instances from all modules
+ec2_instances = filter tfplan.resource_changes as _, rc {
+    rc.type is "aws_instance" and
+        (rc.change.actions contains "create" or rc.change.actions is ["update"])
+}
+
+# Mandatory Instance Tags
+mandatory_tags = [
+    "Name",
+]
+
+# Allowed Types
+allowed_types = [
+    "t2.micro",
+    "t2.small",
+    "t2.medium",
+]
+
+# Rule to enforce "Name" tag on all instances
+mandatory_instance_tags = rule {
+    all ec2_instances as _, instance {
+        all mandatory_tags as mt {
+            instance.change.after.tags contains mt
+        }
+    }
+}
+
+# Rule to restrict instance types
+instance_type_allowed = rule {
+    all ec2_instances as _, instance {
+        instance.change.after.instance_type in allowed_types
+    }
+}
+
+# Main rule that requires other rules to be true
+main = rule {
+    (instance_type_allowed and mandatory_instance_tags) else true
+}
+
+
+##############
+
