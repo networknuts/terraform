@@ -78,5 +78,16 @@ resource "aws_s3_bucket_acl" "newfeature" {
   acl = "public-read"
 }
 
+### There are multiple arguments for specifying the version number. It’s probably a good idea to know
+### these:
+### • >= 1.41.0 is greater than or equal to the version.
+### • <= 1.41.0 is less than or equal to the version.
+### • ∼> 1.41.0 this one is funky. It means any version in the 1.41.X range.
+### • >= 1.20, <= 1.41 is any version between 1.20 and 1.41 inclusive.
+
+### One of the more common arguments is ∼> which is meant to keep you on the same major version,
+### while still allowing for minor version updates. For instance, let’s say there’s major change coming
+### to the Azure provider in version 2.0. By setting the version to ∼>1.0, you would allow all version 1
+### updates that come down while still blocking the big 2.0 release.
 
 
