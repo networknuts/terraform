@@ -15,7 +15,7 @@ provider "aws" {
 resource "aws_instance" "myfirst" {
   ami           = "ami-0447a12f28fddb066"
   instance_type = "t2.micro"
-  key_name = "terraform_ec2_key"
+  key_name = aws_key_pair.terraform_ec2_key.key_name
 }
 
 resource "aws_key_pair" "terraform_ec2_key" {
