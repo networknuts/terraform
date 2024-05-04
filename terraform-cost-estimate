@@ -1,0 +1,7 @@
+# Download terraform.jq file
+$ curl -sLO https://raw.githubusercontent.com/antonbabenko/terraform-cost-estimation/master/terraform.jq
+
+# Get terraform state (or plan), extract cost keys, send them to cost estimation service
+$ terraform state pull | jq -cf terraform.jq | curl -s -X POST -H "Content-Type: application/json" -d @- https://cost.modules.tf/
+
+{"hourly": 0.01, "monthly": 9.07}
