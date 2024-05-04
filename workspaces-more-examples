@@ -1,0 +1,45 @@
+Example #1
+
+resource "aws_instance" "example" {
+  ami           = "ami-0fb653ca2d3203ac1"
+  instance_type = terraform.workspace == "prod" 
+                  ? "m4.large" 
+                  : "t2.micro"
+  tags = {
+    Name = "example-server-${terraform.workspace}"
+  }
+}
+
+# tag will be - example-server-dev in the dev environment and example-server-stage in the stage environment
+# instance type will also be different in different environments, so in production its m4.large else t2.micro
+# code uses ternary notation (CONDTION ? TRUEVAL : FALSEVAL) to pick an instance type
+
+Example #2
+
+Above code for instance type is good if we two options to choose. What if we have dev/test/prod/staging etc...
+
+locals {
+  instance_types = {
+    dev   = "t2.micro"
+    test  = "t2.large"
+    stage = "t2.small"
+    prod  = "m4.large"
+  }
+}
+resource "aws_instance" "example" {
+  ami           = "ami-0fb653ca2d3203ac1"
+  instance_type = local.instance_types[terraform.workspace]
+  tags = {
+    Name = "example-server-${terraform.workspace}"
+  }
+}
+
+EXTRA - Its a good idea to keep you state file on remote backend like S3  
+
+terraform {
+  backend "s3" {
+    bucket = "example-bucket"
+    region = "us-east-2"
+    key    = "example/terraform.tfstate"
+  }
+}
